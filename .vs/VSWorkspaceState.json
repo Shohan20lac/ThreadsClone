@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\components",
+    "\\components\\shared",
+    "\\components\\shared\\forms"
   ],
+  "SelectedNode": "\\next.config.js",
   "PreviewInSolutionExplorer": false
 }
