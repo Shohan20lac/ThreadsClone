@@ -1,8 +1,9 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+
 import * as z from "zod";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,11 +21,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-// import { useUploadThing } from "@/lib/uploadthing";
 import { isBase64Image } from "@/lib/utils";
+import { useUploadThing } from "@/lib/validations/uploadthing";
 
 import { UserValidation } from "@/lib/validations/user";
-// import { updateUser } from "@/lib/actions/user.actions";
+import { updateUser } from "@/lib/actions/user.actions";
 
 interface Props {
   user: {
@@ -34,73 +36,71 @@ interface Props {
     bio:      string;
     image:    string;
   };
-  btnTitle:   string;
+  btnTitle: string;
 }
 
 const AccountProfile = ({ user, btnTitle }: Props) => {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
-//   const { startUpload } = useUploadThing("media");
+  const { startUpload } = useUploadThing("media")
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([])
 
-  const form = useForm<z.infer<typeof UserValidation>>({
+  const form = useForm ({
     resolver: zodResolver(UserValidation),
     defaultValues: {
       profile_photo: user?.image    || "",
       name:          user?.name     || "",
       username:      user?.username || "",
-      bio:           user?.bio      || "",
+      bio:           user?.bio      || ""
     },
-  });
+  })
 
-  const onSubmit = async (values: z.infer<typeof  UserValidation>) => {
-    console.log (values)
-    // const blob = values.profile_photo;
+  const onSubmit = async (values: z.infer<typeof UserValidation>) => {
+    const blob = values.profile_photo;
 
-    // const hasImageChanged = isBase64Image(blob);
-    // if (hasImageChanged) {
-    //   const imgRes = await startUpload(files);
+    const hasImageChanged = isBase64Image(blob)
+    if (hasImageChanged) {
+      const imgRes = await startUpload(files)
 
-    //   if (imgRes && imgRes[0].fileUrl) {
-    //     values.profile_photo = imgRes[0].fileUrl;
-    //   }
-    // }
+      if (imgRes && imgRes[0].fileUrl) {
+        values.profile_photo = imgRes[0].fileUrl;
+      }
+    }
 
-    // await updateUser({
-    //   name: values.name,
-    //   path: pathname,
-    //   username: values.username,
-    //   userId: user.id,
-    //   bio: values.bio,
-    //   image: values.profile_photo,
-    // });
+    // Update User Profile
+    await updateUser ({
+      name:     values.name,
+      path:     pathname,
+      username: values.username,
+      userId:   user.id,
+      bio:      values.bio,
+      image:    values.profile_photo,
+    })
 
-    // if (pathname === "/profile/edit") {
-    //   router.back();
-    // } else {
-    //   router.push("/");
-    // }
-  };
+    if (pathname === "/profile/edit")
+      router.back()
+    else 
+      router.push("/")
+  }
 
   const handleImage = (
     e: ChangeEvent<HTMLInputElement>,
     fieldChange: (value: string) => void
   ) => {
-    e.preventDefault()  // prevents browser reload
+    e.preventDefault();
 
     const fileReader = new FileReader();
 
     if (e.target.files && e.target.files.length > 0) {
-      console.log("file detected")
       const file = e.target.files[0];
-      setFiles(Array.from(e.target.files))  // Update hook to have latest loaded file
+      setFiles(Array.from(e.target.files));
 
       if (!file.type.includes("image")) return;
 
       fileReader.onload = async (event) => {
         const imageDataUrl = event.target?.result?.toString() || "";
-        fieldChange(imageDataUrl) // update field of the React Hook form
+        fieldChange(imageDataUrl);
       };
 
       fileReader.readAsDataURL(file);
@@ -147,6 +147,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
                   onChange={(e) => handleImage(e, field.onChange)}
                 />
               </FormControl>
+              <FormMessage/>
             </FormItem>
           )}
         />
@@ -155,17 +156,18 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
           control={form.control}
           name='name'
           render={({ field }) => (
-            <FormItem className='flex flex-col w-full gap-3'>
+            <FormItem className='flex w-full flex-col gap-3'>
               <FormLabel className='text-base-semibold text-light-2'>
                 Name
               </FormLabel>
-              <FormControl >
+              <FormControl>
                 <Input
-                    type="text"
-                    className='account-form_input no-focus'
-                    {...field}
+                  type='text'
+                  className='account-form_input no-focus'
+                  {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -174,17 +176,21 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
           control={form.control}
           name='username'
           render={({ field }) => (
-            <FormItem className='flex flex-col w-full gap-3'>
+            <FormItem className='flex w-full flex-col gap-4'>
               <FormLabel className='text-base-semibold text-light-2'>
                 Username
               </FormLabel>
               <FormControl>
                 <Input
-                    type="text"
-                    className='account-form_input no-focus'
-                    {...field}
+                  type='text'
+                  className='account-form_input no-focus'
+                  {...field}
                 />
               </FormControl>
+              <FormDescription>
+                This is your public display name.
+              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -193,17 +199,18 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
           control={form.control}
           name='bio'
           render={({ field }) => (
-            <FormItem className='flex flex-col w-full gap-3'>
+            <FormItem className='flex w-full flex-col gap-3'>
               <FormLabel className='text-base-semibold text-light-2'>
                 Bio
               </FormLabel>
               <FormControl>
                 <Textarea
-                    rows = {10}
-                    className='account-form_input no-focus'
-                    {...field}
+                  rows={10}
+                  className='account-form_input no-focus'
+                  {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
