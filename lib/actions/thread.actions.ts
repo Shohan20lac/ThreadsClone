@@ -14,38 +14,58 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
   // Calculate the number of posts to skip based on the page number and page size.
   const skipAmount = (pageNumber - 1) * pageSize;
 
-  // Create a query to fetch the posts that have no parent (top-level threads) (a thread that is not a comment/reply).
-  const postsQuery = Thread.find({ parentId: { $in: [null, undefined] } })
-    .sort({ createdAt: "desc" })
-    .skip(skipAmount)
-    .limit(pageSize)
-    .populate({
-      path: "author",
-      model: User,
-    })
-    .populate({
-      path: "community",
-      model: Community,
-    })
-    .populate({
-      path: "children", // Populate the children field
-      populate: {
-        path: "author", // Populate the author field within children
+
+  try {
+    // Create a query to fetch the posts that have no parent (top-level threads) (a thread that is not a comment/reply).
+    const postsQuery = Thread.find({ parentId: { $in: [null, undefined] } })
+      .sort({ createdAt: "desc" })
+      .skip(skipAmount)
+      .limit(pageSize)
+      .populate({
+        path: "author",
         model: User,
-        select: "_id name parentId image", // Select only _id and username fields of the author
-      },
-    });
+      })
+      .populate({
+        path: "community",
+        model: Community,
+      })
+      .populate({
+        path: "children", // Populate the children field
+        populate: {
+          path: "author", // Populate the author field within children
+          model: User,
+          select: "_id name parentId image", // Select only _id and username fields of the author
+        },
+      })
+      console.log ("query built successfully")
+        
+      try {
+        // Count the total number of top-level posts (threads) i.e., threads that are not comments.
+          const totalPostsCount = await Thread.countDocuments({
+            parentId: { $in: [null, undefined] },
+          }); // Get the total count of posts
+          console.log("documents counted successfully")
+        
+          try {
+              console.log("before exec")
+              const posts = await postsQuery.exec();
+              console.log("after exec")
+            
+              const isNext = totalPostsCount > skipAmount + posts.length;
+              console.log ("query exec successful")
+              return { posts, isNext }
 
-  // Count the total number of top-level posts (threads) i.e., threads that are not comments.
-  const totalPostsCount = await Thread.countDocuments({
-    parentId: { $in: [null, undefined] },
-  }); // Get the total count of posts
+          } catch (error: any) {
+            console.log (`query exec unsuccessful ${error.message}`)
+          }
+      } catch (error) {
+        console.log("failed to count documents")
+      } 
 
-  const posts = await postsQuery.exec();
+  } catch (error: any) {
+    console.log("query build unsucessful")
+  }
 
-  const isNext = totalPostsCount > skipAmount + posts.length;
-
-  return { posts, isNext };
 }
 
 interface Params {
@@ -65,32 +85,27 @@ export async function createThread({ text, author, communityId, path }: Params
       { _id: 1 }
     );
 
+    const createdThread = await Thread.create({
+      text,
+      author,
+      community: communityIdObject, // Assign communityId if provided, or leave it null for personal account
+    });
 
-    try {
-      const createdThread = await Thread.create({
-        text,
-        author,
-        community: communityIdObject, // Assign communityId if provided, or leave it null for personal account
-      })
-      console.log ("thread created successfully")
+    // Update User model
+    await User.findByIdAndUpdate(author, {
+      $push: { threads: createdThread._id },
+    });
 
-      try {
-        // Update User model
-        await User.findByIdAndUpdate(author, {
-          $push: { threads: createdThread._id },
-        })
-        console.log("user updated successfully")
-      } catch (error: any) {
-        console.log (`failed to update user ${error.message}`)
-      }
-      
-    } catch (error: any) {
-      console.log (`failed to create Thread ${error.message}`)
+    if (communityIdObject) {
+      // Update Community model
+      await Community.findByIdAndUpdate(communityIdObject, {
+        $push: { threads: createdThread._id },
+      });
     }
 
     revalidatePath(path);
   } catch (error: any) {
-    throw new Error(`Failed to create thread/user: ${error.message}`);
+    throw new Error(`Failed to create thread: ${error.message}`);
   }
 }
 
