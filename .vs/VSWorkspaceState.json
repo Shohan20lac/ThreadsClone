@@ -1,10 +1,14 @@
 {
   "ExpandedNodes": [
     "",
+    "\\app\\(root)\\create-thread",
     "\\components",
     "\\components\\shared",
-    "\\components\\shared\\forms"
+    "\\components\\shared\\forms",
+    "\\lib",
+    "\\lib\\actions",
+    "\\lib\\models"
   ],
-  "SelectedNode": "\\package.json",
+  "SelectedNode": "\\components\\shared\\forms\\PostThread.tsx",
   "PreviewInSolutionExplorer": false
 }
