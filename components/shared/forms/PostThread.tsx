@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ThreadValidation } from "@/lib/validations/thread";
-import { createThread }     from "@/lib/actions/thread.actions";
+import { createThread } from "@/lib/actions/thread.actions";
 
 interface Props {
   userId: string;
@@ -33,10 +33,10 @@ function PostThread({ userId }: Props) {
   const form = useForm<z.infer<typeof ThreadValidation>>({
     resolver: zodResolver(ThreadValidation),
     defaultValues: {
-      thread:    "",
+      thread: "",
       accountId: userId,
-    }
-  })
+    },
+  });
 
   const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
     await createThread({
