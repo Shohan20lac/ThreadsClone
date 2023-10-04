@@ -37,42 +37,28 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
           select: "_id name parentId image", // Select only _id and username fields of the author
         },
       })
-      console.log ("query built successfully")
         
       try {
         // Count the total number of top-level posts (threads) i.e., threads that are not comments.
           const totalPostsCount = await Thread.countDocuments({
             parentId: { $in: [null, undefined] },
-          }); // Get the total count of posts
-          console.log("documents counted successfully")
+          }) // Get the total count of posts
         
           try {
-              console.log("before exec")
-              const posts = await postsQuery.exec();
-              console.log("after exec")
-            
-              const isNext = totalPostsCount > skipAmount + posts.length;
-              console.log ("query exec successful")
+              const posts = await postsQuery.exec()
+              const isNext = totalPostsCount > skipAmount + posts.length
               return { posts, isNext }
-
-          } catch (error: any) {
-            console.log (`query exec unsuccessful ${error.message}`)
-          }
-      } catch (error) {
-        console.log("failed to count documents")
-      } 
-
-  } catch (error: any) {
-    console.log("query build unsucessful")
-  }
+          } catch (error: any) {console.log (`query exec unsuccessful ${error.message}`)}
+      } catch     (error: any) {console.log ("failed to count documents")} 
+  } catch         (error: any) {console.log ("query build unsucessful")}
 
 }
 
 interface Params {
-  text: string,
-  author: string,
+  text:        string,
+  author:      string,
   communityId: string | null,
-  path: string,
+  path:        string,
 }
 
 export async function createThread({ text, author, communityId, path }: Params
