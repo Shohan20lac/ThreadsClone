@@ -10,6 +10,7 @@ const nextConfig = {
       ignoreDuringBuilds: true,
     },
     images: {
+      domains: ['utfs.io'],
       remotePatterns: [
         {
           protocol: "https",
@@ -31,9 +32,20 @@ const nextConfig = {
           protocol: 'https',
           hostname: 'utfs.io',
           port: '',
-          pathname: '/',
+          pathname: '/', // Allow images from the root path
         },
-
+        {
+          protocol: 'https',
+          hostname: 'utfs.io',
+          port: '',
+          pathname: '/images', // Allow images from a subdirectory "/images" (adjust as needed)
+        },
+        {
+          protocol: 'https',
+          hostname: 'utfs.io',
+          port: '',
+          pathname: '/assets', // Allow images from a subdirectory "/assets" (adjust as needed)
+        },
       ]
     }
   }

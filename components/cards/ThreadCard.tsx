@@ -28,17 +28,19 @@ interface Props {
   isComment?: boolean;
 }
 
-function ThreadCard({
-  id,
-  currentUserId,
-  parentId,
-  content,
-  author,
-  community,
-  createdAt,
-  comments,
-  isComment,
-}: Props) {
+function ThreadCard(
+  {
+    id,
+    currentUserId,
+    parentId,
+    content,
+    author,
+    community,
+    createdAt,
+    comments,
+    isComment,
+  }: Props
+) {
   return (
     <article
       className={`flex w-full flex-col rounded-xl ${
