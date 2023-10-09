@@ -136,7 +136,7 @@ export async function fetchUsers({
     const usersQuery = User.find(query)
       .sort(sortOptions)
       .skip(skipAmount)
-      .limit(pageSize);
+      .limit(pageSize)
 
     // Count the total number of users that match the search criteria (without pagination).
     const totalUsersCount = await User.countDocuments(query);
